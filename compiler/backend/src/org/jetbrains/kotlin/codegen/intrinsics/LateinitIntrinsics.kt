@@ -16,8 +16,11 @@
 
 package org.jetbrains.kotlin.codegen.intrinsics
 
+import org.jetbrains.kotlin.codegen.Callable
+import org.jetbrains.kotlin.codegen.CallableMethod
 import org.jetbrains.kotlin.codegen.ExpressionCodegen
 import org.jetbrains.kotlin.codegen.StackValue
+import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.descriptors.PropertyDescriptor
 import org.jetbrains.kotlin.psi.KtCallableReferenceExpression
 import org.jetbrains.kotlin.resolve.calls.callUtil.getResolvedCallWithAssert
@@ -25,11 +28,31 @@ import org.jetbrains.kotlin.resolve.calls.model.ResolvedCall
 import org.jetbrains.kotlin.resolve.scopes.receivers.ExpressionReceiver
 import org.jetbrains.org.objectweb.asm.Opcodes
 import org.jetbrains.org.objectweb.asm.Type
+import org.jetbrains.org.objectweb.asm.commons.InstructionAdapter
 
 object LateinitIsInitialized : IntrinsicPropertyGetter() {
     override fun generate(resolvedCall: ResolvedCall<*>?, codegen: ExpressionCodegen, returnType: Type, receiver: StackValue): StackValue? {
         val value = getStackValue(resolvedCall ?: return null, codegen) ?: return null
         return StackValue.compareWithNull(value, Opcodes.IFNULL)
+    }
+}
+
+object LateinitDeinitialize : IntrinsicMethod() {
+    override fun toCallable(fd: FunctionDescriptor, isSuper: Boolean, resolvedCall: ResolvedCall<*>, codegen: ExpressionCodegen): Callable =
+            generate(fd, resolvedCall, codegen) ?: super.toCallable(fd, isSuper, resolvedCall, codegen)
+
+    private fun generate(fd: FunctionDescriptor, resolvedCall: ResolvedCall<*>, codegen: ExpressionCodegen): Callable? {
+        val value = getStackValue(resolvedCall, codegen) ?: return null
+        val callableMethod = codegen.state.typeMapper.mapToCallableMethod(fd, false)
+        return LateinitDeinitializeIntrinsicCallable(value, callableMethod)
+    }
+}
+
+private class LateinitDeinitializeIntrinsicCallable(private val value: StackValue, method: CallableMethod) : IntrinsicCallable(
+        method.returnType, method.valueParameterTypes, method.dispatchReceiverType, method.extensionReceiverType
+), IntrinsicWithSpecialReceiver {
+    override fun invokeIntrinsic(v: InstructionAdapter) {
+        value.store(StackValue.constant(null, value.type), v)
     }
 }
 

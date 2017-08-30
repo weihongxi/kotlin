@@ -1364,6 +1364,12 @@ public class DiagnosticsTestWithStdLibUsingJavacGenerated extends AbstractDiagno
             KotlinTestUtils.assertAllTestsPresentByMetadata(this.getClass(), new File("compiler/testData/diagnostics/testsWithStdLib/lateinit"), Pattern.compile("^(.+)\\.kt$"), TargetBackend.ANY, true);
         }
 
+        @TestMetadata("deinitialize.kt")
+        public void testDeinitialize() throws Exception {
+            String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/testsWithStdLib/lateinit/deinitialize.kt");
+            doTest(fileName);
+        }
+
         @TestMetadata("isInitialized.kt")
         public void testIsInitialized() throws Exception {
             String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/testsWithStdLib/lateinit/isInitialized.kt");

@@ -17,3 +17,14 @@ import kotlin.reflect.KProperty0
 @InlineOnly
 inline val @receiver:AccessibleLateinitPropertyLiteral KProperty0<*>.isInitialized: Boolean
     get() = throw NotImplementedError("Implementation is intrinsic")
+
+/**
+ * Resets the value of this lateinit property, making it non-initialized.
+ *
+ * Cannot be used in an inline function, to avoid binary compatibility issues.
+ */
+@SinceKotlin("1.2")
+@InlineOnly
+inline fun @receiver:AccessibleLateinitPropertyLiteral KProperty0<*>.deinitialize() {
+    throw NotImplementedError("Implementation is intrinsic")
+}

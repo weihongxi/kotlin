@@ -70,6 +70,7 @@ public class IntrinsicMethods {
         intrinsicsMap.registerIntrinsic(KOTLIN_JVM, KotlinBuiltIns.FQ_NAMES.array, "isArrayOf", 0, new IsArrayOf());
 
         intrinsicsMap.registerIntrinsic(BUILT_INS_PACKAGE_FQ_NAME, KotlinBuiltIns.FQ_NAMES.kProperty0, "isInitialized", -1, LateinitIsInitialized.INSTANCE);
+        intrinsicsMap.registerIntrinsic(BUILT_INS_PACKAGE_FQ_NAME, KotlinBuiltIns.FQ_NAMES.kProperty0, "deinitialize", 0, LateinitDeinitialize.INSTANCE);
 
         intrinsicsMap.registerIntrinsic(BUILT_INS_PACKAGE_FQ_NAME, null, "arrayOf", 1, new ArrayOf());
 

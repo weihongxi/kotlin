@@ -37,7 +37,7 @@ object LateinitIntrinsicApplicabilityChecker : CallChecker {
         val descriptor = resolvedCall.resultingDescriptor
 
         // An optimization
-        if (descriptor.name.asString() != "isInitialized") return
+        if (descriptor.name.asString().let { it != "isInitialized" && it != "deinitialize" }) return
 
         // TODO: store "@receiver:..." annotations in ReceiverParameterDescriptor
         val annotations = descriptor.extensionReceiverParameter?.value?.type?.annotations?.getUseSiteTargetedAnnotations() ?: return
