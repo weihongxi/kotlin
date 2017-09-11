@@ -16,9 +16,12 @@
 
 package org.jetbrains.kotlin.cli.common.arguments
 
+import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
+import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.config.AnalysisFlag
 import org.jetbrains.kotlin.config.JvmTarget
 import org.jetbrains.kotlin.utils.Jsr305State
+import org.jetbrains.kotlin.utils.ReportLevel
 
 class K2JVMCompilerArguments : CommonCompilerArguments() {
     companion object {
@@ -175,9 +178,69 @@ class K2JVMCompilerArguments : CommonCompilerArguments() {
     // Paths to output directories for friend modules.
     var friendPaths: Array<String>? by FreezableVar(null)
 
-    override fun configureAnalysisFlags(): MutableMap<AnalysisFlag<*>, Any> {
-        val result = super.configureAnalysisFlags()
-        result[AnalysisFlag.jsr305] = Jsr305State.fromArgs(jsr305)
+    override fun configureAnalysisFlags(collector: MessageCollector): MutableMap<AnalysisFlag<*>, Any> {
+        val result = super.configureAnalysisFlags(collector)
+        result[AnalysisFlag.jsr305] = parseJsr305(collector)
         return result
+    }
+
+    fun parseJsr305(collector: MessageCollector): Jsr305State {
+        var global: ReportLevel? = null
+        var migration: ReportLevel? = null
+        val userDefined = mutableMapOf<String, ReportLevel>()
+
+        val report = { item: String -> collector.report(CompilerMessageSeverity.ERROR, "Unrecognized -Xjsr305 value: $item") }
+
+        jsr305?.forEach { item ->
+            when {
+                item.startsWith("@") -> parseJsr305UserDefined(item)?.let { (name, state) ->
+                    if (userDefined.containsKey(name)) {
+                        val current = "@$name:${userDefined[name].toString().toLowerCase()}"
+                        collector.report(
+                                CompilerMessageSeverity.ERROR,
+                                "Conflict duplicating -Xjsr305 user annotation value: $current, $item"
+                        )
+                    } else {
+                        userDefined[name] = state
+                    }
+                }
+                item.startsWith("under-migration") -> {
+                    if (migration != null) {
+                        val current = "under-migration:${migration.toString().toLowerCase()}"
+                        collector.report(
+                                CompilerMessageSeverity.ERROR,
+                                "Conflict duplicating -Xjsr305 under-migration value: $current, $item"
+                        )
+                    }
+                    else {
+                        parseJsr305UnderMigration(item)?.let { migration = it }
+                    }
+                }
+                else -> {
+                    if (global != null) {
+                        val current = global.toString().toLowerCase()
+                        collector.report(CompilerMessageSeverity.ERROR, "Conflict duplicating -Xjsr305 value: $current, $item")
+                    }
+                    else {
+                        ReportLevel.findByDescription(item)?.let { global = it }
+                    }
+                }
+            } ?: report(item)
+        }
+
+        val state = Jsr305State(global ?: ReportLevel.WARN, migration, userDefined)
+        return if (state == Jsr305State.DISABLED) Jsr305State.DISABLED else state
+    }
+
+    private fun parseJsr305UserDefined(item: String): Pair<String, ReportLevel>? {
+        val (name, rawState) = item.substring(1).split(":").takeIf { it.size == 2 } ?: return null
+        val state = ReportLevel.findByDescription(rawState) ?: return null
+
+        return name to state
+    }
+
+    private fun parseJsr305UnderMigration(item: String): ReportLevel? {
+        val (_, rawState) = item.split(":").takeIf { it.size == 2 } ?: return null
+        return ReportLevel.findByDescription(rawState)
     }
 }
