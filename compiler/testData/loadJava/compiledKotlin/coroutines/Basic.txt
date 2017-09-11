@@ -1,6 +1,6 @@
 package test
 
-public fun builder(/*0*/ c: suspend test.Controller.() -> kotlin.Unit): kotlin.Unit
+public fun builder(/*0*/ c: (suspend test.Controller.() -> kotlin.Unit)): kotlin.Unit
 
 public final class Controller {
     /*primary*/ public constructor Controller()
