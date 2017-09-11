@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="idea-full-ultimate">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/ultimate/ideaSDK/lib" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+    <jarDirectory url="file://$PROJECT_DIR$/ultimate/ideaSDK/lib" recursive="false" />
+  </library>
+</component>
