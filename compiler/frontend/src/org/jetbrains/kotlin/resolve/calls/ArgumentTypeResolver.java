@@ -16,6 +16,7 @@
 
 package org.jetbrains.kotlin.resolve.calls;
 
+import com.intellij.psi.util.PsiTreeUtil;
 import kotlin.Pair;
 import kotlin.collections.CollectionsKt;
 import org.jetbrains.annotations.NotNull;
@@ -210,6 +211,18 @@ public class ArgumentTypeResolver {
         return null;
     }
 
+    public static boolean isNamedArgumentInAnnotation(
+            @NotNull KtExpression expression,
+            @NotNull CallResolutionContext<?> context
+    ) {
+        if (!(context.call.getCallElement() instanceof KtAnnotationEntry)) {
+            return false;
+        }
+
+        KtValueArgument valueArgument = PsiTreeUtil.getParentOfType(expression, KtValueArgument.class);
+        return valueArgument != null && valueArgument.isNamed();
+    }
+
     @NotNull
     public KotlinTypeInfo getArgumentTypeInfo(
             @Nullable KtExpression expression,
@@ -246,6 +259,13 @@ public class ArgumentTypeResolver {
         ResolutionContext newContext = context.replaceExpectedType(NO_EXPECTED_TYPE).replaceContextDependency(DEPENDENT);
 
         return expressionTypingServices.getTypeInfo(expression, newContext);
+    }
+
+    @NotNull
+    public KotlinTypeInfo getArgumentTypeInfo(
+            @NotNull KtExpression expression,
+            @NotNull CallResolutionContext<?> context) {
+        return expressionTypingServices.getTypeInfo(expression, context.replaceContextDependency(INDEPENDENT));
     }
 
     @NotNull
