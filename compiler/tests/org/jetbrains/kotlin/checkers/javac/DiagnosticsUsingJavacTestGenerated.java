@@ -23734,6 +23734,24 @@ public class DiagnosticsUsingJavacTestGenerated extends AbstractDiagnosticsUsing
                 doTest(fileName);
             }
 
+            @TestMetadata("assigningArraysToVarargsInAnnotations.kt")
+            public void testAssigningArraysToVarargsInAnnotations() throws Exception {
+                String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/varargs/assigningArraysToVarargsInAnnotations.kt");
+                doTest(fileName);
+            }
+
+            @TestMetadata("assigningSingleElementsInNamedFormAnnDeprecation.kt")
+            public void testAssigningSingleElementsInNamedFormAnnDeprecation() throws Exception {
+                String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/varargs/assigningSingleElementsInNamedFormAnnDeprecation.kt");
+                doTest(fileName);
+            }
+
+            @TestMetadata("assigningSingleElementsInNamedFormFunDeprecation.kt")
+            public void testAssigningSingleElementsInNamedFormFunDeprecation() throws Exception {
+                String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/varargs/assigningSingleElementsInNamedFormFunDeprecation.kt");
+                doTest(fileName);
+            }
+
             @TestMetadata("kt1781.kt")
             public void testKt1781() throws Exception {
                 String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/varargs/kt1781.kt");

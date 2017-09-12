@@ -27,14 +27,12 @@ import org.jetbrains.kotlin.progress.ProgressIndicatorAndCompilationCanceledStat
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.resolve.*
 import org.jetbrains.kotlin.resolve.calls.CallTransformer.CallForImplicitInvoke
-import org.jetbrains.kotlin.resolve.calls.callResolverUtil.ResolveArgumentsMode
+import org.jetbrains.kotlin.resolve.calls.callResolverUtil.*
 import org.jetbrains.kotlin.resolve.calls.callResolverUtil.ResolveArgumentsMode.SHAPE_FUNCTION_ARGUMENTS
-import org.jetbrains.kotlin.resolve.calls.callResolverUtil.getEffectiveExpectedType
-import org.jetbrains.kotlin.resolve.calls.callResolverUtil.getErasedReceiverType
-import org.jetbrains.kotlin.resolve.calls.callResolverUtil.isInvokeCallOnExpressionWithBothReceivers
 import org.jetbrains.kotlin.resolve.calls.callUtil.isExplicitSafeCall
 import org.jetbrains.kotlin.resolve.calls.callUtil.isSafeCall
 import org.jetbrains.kotlin.resolve.calls.checkers.AdditionalTypeChecker
+import org.jetbrains.kotlin.resolve.calls.components.isVararg
 import org.jetbrains.kotlin.resolve.calls.context.*
 import org.jetbrains.kotlin.resolve.calls.inference.SubstitutionFilteringInternalResolveAnnotations
 import org.jetbrains.kotlin.resolve.calls.model.ArgumentMatchStatus
@@ -363,7 +361,9 @@ class CandidateResolver(
             for (argument in resolvedArgument.arguments) {
                 val expression = argument.getArgumentExpression() ?: continue
 
-                val expectedType = getEffectiveExpectedType(parameterDescriptor, argument)
+                checkAssignmentOfSingleElementToVararg(argument, parameterDescriptor, context)
+
+                val expectedType = getEffectiveExpectedType(parameterDescriptor, argument, context)
 
                 val newContext = context.replaceDataFlowInfo(infoForArguments.getInfo(argument)).replaceExpectedType(expectedType)
                 val typeInfoForCall = argumentTypeResolver.getArgumentTypeInfo(expression, newContext, resolveFunctionArgumentBodies)
@@ -406,6 +406,51 @@ class CandidateResolver(
         }
         return ValueArgumentsCheckingResult(resultStatus, argumentTypes)
     }
+
+    private fun checkAssignmentOfSingleElementToVararg(
+            argument: ValueArgument,
+            parameterDescriptor: ValueParameterDescriptor,
+            context: ResolutionContext<*>
+    ) {
+        if (!argument.isNamed()) return
+        if (!parameterDescriptor.isVararg) return
+
+        val argumentExpression = argument.getArgumentExpression() ?: return
+
+        if (isParameterOfAnnotation(parameterDescriptor)) {
+            checkAssignmentOfSingleElementInAnnotation(argument, argumentExpression, context)
+        }
+        else {
+            checkAssignmentOfSingleElementInFunction(argument, argumentExpression, context)
+        }
+    }
+
+    private fun checkAssignmentOfSingleElementInAnnotation(
+            argument: ValueArgument,
+            argumentExpression: KtExpression,
+            context: ResolutionContext<*>
+    ) {
+        if (isArrayOrArrayLiteral(argument, context)) {
+            if (argument.getSpreadElement() != null) {
+                context.trace.report(Errors.ASSIGNING_SINGLE_ELEMENT_TO_VARARG_IN_NAMED_FORM.on(argumentExpression))
+            }
+        }
+        else {
+            context.trace.report(Errors.ASSIGNING_SINGLE_ELEMENT_TO_VARARG_IN_NAMED_FORM.on(argumentExpression))
+        }
+    }
+
+    private fun checkAssignmentOfSingleElementInFunction(
+            argument: ValueArgument,
+            argumentExpression: KtExpression,
+            context: ResolutionContext<*>
+    ) {
+        if (!argument.hasSpread()) {
+            context.trace.report(Errors.ASSIGNING_SINGLE_ELEMENT_TO_VARARG_IN_NAMED_FORM.on(argumentExpression))
+        }
+    }
+
+    private fun ValueArgument.hasSpread() = getSpreadElement() != null
 
     private fun smartCastValueArgumentTypeIfPossible(
             expression: KtExpression,
