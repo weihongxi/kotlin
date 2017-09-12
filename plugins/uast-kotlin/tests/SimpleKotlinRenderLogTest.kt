@@ -30,4 +30,6 @@ class SimpleKotlinRenderLogTest : AbstractKotlinRenderLogTest() {
     @Test fun testPropertyDelegate() = doTest("PropertyDelegate")
 
     @Test fun testPropertyWithAnnotation() = doTest("PropertyWithAnnotation")
+
+    @Test fun testIfStatement() = doTest("IfStatement")
 }

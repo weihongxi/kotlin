@@ -22,7 +22,7 @@ import org.jetbrains.uast.UElement
 
 class KotlinUBlockExpression(
         override val psi: KtBlockExpression,
-        override val uastParent: UElement?
-) : KotlinAbstractUExpression(), UBlockExpression, KotlinUElementWithType {
+        givenParent: UElement?
+) : KotlinAbstractUExpression(givenParent), UBlockExpression, KotlinUElementWithType {
     override val expressions by lz { psi.statements.map { KotlinConverter.convertOrEmpty(it, this) } }
 }

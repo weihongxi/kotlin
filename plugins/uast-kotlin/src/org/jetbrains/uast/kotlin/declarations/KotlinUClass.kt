@@ -30,10 +30,12 @@ import org.jetbrains.uast.kotlin.declarations.UastLightIdentifier
 
 class KotlinUClass private constructor(
         psi: KtLightClass,
-        override val uastParent: UElement?
+        private val givenParent: UElement?
 ) : AbstractJavaUClass(), PsiClass by psi {
 
     val ktClass = psi.kotlinOrigin
+
+    override val uastParent: UElement? by lz { convertParent(givenParent) }
 
     override val psi = unwrap<UClass, PsiClass>(psi)
 
@@ -123,8 +125,10 @@ class KotlinUClass private constructor(
 
 class KotlinUAnonymousClass(
         psi: PsiAnonymousClass,
-        override val uastParent: UElement?
+        private val givenParent: UElement?
 ) : AbstractJavaUClass(), UAnonymousClass, PsiAnonymousClass by psi {
+
+    override val uastParent: UElement? by lz { convertParent(givenParent) }
 
     override val psi: PsiAnonymousClass = unwrap<UAnonymousClass, PsiAnonymousClass>(psi)
 
