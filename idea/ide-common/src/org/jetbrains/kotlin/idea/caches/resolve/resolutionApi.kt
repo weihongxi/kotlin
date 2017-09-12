@@ -30,6 +30,7 @@ import org.jetbrains.kotlin.resolve.BindingTraceContext
 import org.jetbrains.kotlin.resolve.ImportPath
 import org.jetbrains.kotlin.resolve.QualifiedExpressionResolver
 import org.jetbrains.kotlin.resolve.lazy.BodyResolveMode
+import org.jetbrains.kotlin.resolve.lazy.NoDescriptorForDeclarationException
 
 fun KtElement.getResolutionFacade(): ResolutionFacade =
         KotlinCacheService.getInstance(project).getResolutionFacade(listOf(this))
@@ -40,7 +41,7 @@ fun KtElement.getResolutionFacade(): ResolutionFacade =
  * But for non-local declarations it ignores bodyResolveMode and uses LazyDeclarationResolver directly
  */
 fun KtDeclaration.resolveToDescriptor(bodyResolveMode: BodyResolveMode = BodyResolveMode.FULL): DeclarationDescriptor =
-        getResolutionFacade().resolveToDescriptor(this, bodyResolveMode)
+        resolveToDescriptorIfAny(bodyResolveMode) ?: throw NoDescriptorForDeclarationException(this)
 
 /**
  * This function first uses declaration resolvers to resolve this declaration and/or additional declarations (e.g. its parent),
