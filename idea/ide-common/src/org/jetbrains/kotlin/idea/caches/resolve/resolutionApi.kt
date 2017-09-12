@@ -34,11 +34,21 @@ import org.jetbrains.kotlin.resolve.lazy.BodyResolveMode
 fun KtElement.getResolutionFacade(): ResolutionFacade =
         KotlinCacheService.getInstance(project).getResolutionFacade(listOf(this))
 
+/**
+ * For local declarations is equivalent to resolveToDescriptorIfAny(bodyResolveMode) ?: throw NoDescriptorForDeclarationException
+ *
+ * But for non-local declarations it ignores bodyResolveMode and uses LazyDeclarationResolver directly
+ */
 fun KtDeclaration.resolveToDescriptor(bodyResolveMode: BodyResolveMode = BodyResolveMode.FULL): DeclarationDescriptor =
         getResolutionFacade().resolveToDescriptor(this, bodyResolveMode)
 
-//TODO: BodyResolveMode.PARTIAL is not quite safe!
+/**
+ * This function first uses declaration resolvers to resolve this declaration and/or additional declarations (e.g. its parent),
+ * and then takes the relevant descriptor from binding context got.
+ * The exact set of declarations to resolve depends on bodyResolveMode
+ */
 fun KtDeclaration.resolveToDescriptorIfAny(bodyResolveMode: BodyResolveMode = BodyResolveMode.PARTIAL): DeclarationDescriptor? {
+    //TODO: BodyResolveMode.PARTIAL is not quite safe!
     val context = analyze(bodyResolveMode)
     if (this is KtParameter && this.hasValOrVar()) {
         return context.get(BindingContext.PRIMARY_CONSTRUCTOR_PARAMETER, this)
