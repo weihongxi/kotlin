@@ -18,6 +18,7 @@ package org.jetbrains.kotlin.resolve.calls
 
 import com.google.common.collect.Lists
 import org.jetbrains.kotlin.builtins.ReflectionTypes
+import org.jetbrains.kotlin.config.LanguageFeature
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
 import org.jetbrains.kotlin.descriptors.impl.TypeAliasConstructorDescriptor
@@ -412,6 +413,8 @@ class CandidateResolver(
             parameterDescriptor: ValueParameterDescriptor,
             context: ResolutionContext<*>
     ) {
+        if (!context.languageVersionSettings.supportsFeature(LanguageFeature.AssigningArraysToVarargsInNamedFormInAnnotations)) return
+
         if (!argument.isNamed()) return
         if (!parameterDescriptor.isVararg) return
 

@@ -21,6 +21,7 @@ import com.intellij.util.containers.ContainerUtil
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.builtins.ReflectionTypes
 import org.jetbrains.kotlin.builtins.isSuspendFunctionType
+import org.jetbrains.kotlin.config.LanguageFeature
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.impl.TypeAliasConstructorDescriptor
 import org.jetbrains.kotlin.lexer.KtToken
@@ -207,6 +208,8 @@ private fun shouldCheckAsArray(
         argument: ValueArgument,
         context: ResolutionContext<*>
 ): Boolean {
+    if (!context.languageVersionSettings.supportsFeature(LanguageFeature.AssigningArraysToVarargsInNamedFormInAnnotations)) return false
+
     return argument.isNamed() && isArrayOrArrayLiteral(argument, context) &&
            parameterDescriptor.isVararg && isParameterOfAnnotation(parameterDescriptor)
 }
